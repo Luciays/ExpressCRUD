@@ -5,3 +5,12 @@ html
     link(rel='stylesheet', href='/stylesheets/style.css')
   body
     block content
+
+    if user_id
+    li.nav-item
+      a.mr-2(href="/user/logout") Logout
+  else
+    li.nav-item
+      a.mr-2(href="/user/login") Login
+    li.nav-item
+      a.mr-2(href="/user/register") Register

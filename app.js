@@ -77,3 +77,12 @@ app.use(function(err, req, res, next) {
 });
 
 module.exports = app;
+
+//Session serialization
+passport.serializeUser(function(user, done) {
+  done(null, {id: user.id, email: user.email, role: user.role});
+});
+
+passport.deserializeUser(function(user, done) {
+  done(null, {id: user.id, email: user.email, role: user.role});
+});

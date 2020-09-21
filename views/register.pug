@@ -1,0 +1,34 @@
+extends layout
+
+block content
+
+  div.row
+    div.col
+      div.message.alert.alert-danger(style="display:none;")
+        | #{message}
+      form(onsubmit="return false;")
+        div.form-group
+          label(for="email") Email
+          input.form-control.email(type="email", name="email", aria-describedby="emailHelp", autocomplete="username")
+          small#emailHelp.form-text.text-muted We'll never share your email with anyone else.
+        div.form-group
+          label(for="password") Password
+          input.form-control.password(type="password", name="password", aria-describedby="passwordHelp", autocomplete="current-password")
+          small#passwordHelp.form-text.text-muted Password must be 8 characters or more.
+        div.form-group
+          button.submit.btn.btn-primary(type="button") Register
+
+script.
+  $('#registerModal .submit').on('click', function() {
+    $.post('/user/register', {
+      email: $('#registerModal .email').val(),
+      password: $('#registerModal .password').val()
+    }, function(resp) {
+      if (resp.status == 'error') {
+        $('#registerModal .message').text(resp.message).show();
+      } else {
+          window.alert('success - you should redirect your user');
+        }
+      }
+    })
+  });

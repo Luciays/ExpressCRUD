@@ -89,3 +89,27 @@ router.get('/', function(req, res, next) {
 });
 
 module.exports = router;
+
+//login route
+router.get('/login', function(req, res, next) {
+  res.render('user/login', { });
+});
+
+router.post('/login', function(req, res, next) {
+  passport.authenticate('local', function(err, user, info) {
+    if (err) { return next(err); }
+    if (!user) {
+      return res.json({status: 'error', message: info.message});
+    }
+    req.logIn(user, function(err) {
+      if (err) { return next(err); }
+      return res.json({status: 'ok'});
+    });
+  })(req, res, next);
+});
+
+router.get('/logout',
+  function(req, res){
+    req.logout();
+    res.redirect('/');
+});

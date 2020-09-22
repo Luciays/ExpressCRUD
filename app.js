@@ -5,7 +5,8 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+// var usersRouter = require('./routes/users');
+var userRouter = require('./routes/user');
 
 var crypto = require('crypto');
 var mysql = require('mysql');
@@ -13,20 +14,19 @@ var session = require("express-session");
 var MySQLStore = require('express-mysql-session')(session);
 var passport = require('passport'), LocalStrategy = require('passport-local').Strategy;
 
-var userRouter = require('./routes/user');
+var dbConfig = require('./config/config.json');
 
-var connection = mysql.createConnection({
-  host: process.env.SESSIONSDB_HOST,
-  port: process.env.SESSIONSDB_PORT,
-  user: process.env.SESSIONSDB_USER,
-  password: process.env.SESSIONSDB_PASS,
-  database: process.env.SESSIONSDB_DB
-});
+var connection = mysql.createConnection(dbConfig.development);
 
-var sessionStore = new MySQLStore({
-  checkExpirationInterval: parseInt(process.env.SESSIONSDB_CHECK_EXP_INTERVAL, 10),
-  expiration: parseInt(process.env.SESSIONSDB_EXPIRATION, 10)
-}, connection);
+var del = connection._protocol._delegateError;
+connection._protocol._delegateError = function(err, sequence){
+      if (err.fatal) {
+        console.trace('fatal error: ' + err.message);
+      }
+      return del.call(this, err, sequence);
+};
+
+var sessionStore = new MySQLStore({}, connection);
 
 var app = express();
 
@@ -37,14 +37,14 @@ expireDate.setDate(expireDate.getDate() + 1);
 app.use(session({
   resave: true,
   saveUninitialized: true,
-  secret: process.env.SESSIONSDB_SECRET,
+  secret: "key secret",
   store: sessionStore,
   cookie: { expires: expireDate }
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
-app.use('/user', userRouter);
+
 
 
 // view engine setup
@@ -58,7 +58,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/users', userRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -85,4 +85,10 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(user, done) {
   done(null, {id: user.id, email: user.email, role: user.role});
+});
+
+//pass user variable to the view template
+app.use(function (req, res, next) {
+  res.locals.user_id = req.user.id;
+  next();
 });
